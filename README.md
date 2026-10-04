@@ -48,6 +48,12 @@ python server.py [端口]      # 纯服务模式，浏览器访问 http://127.0.
 
 **便携说明**：仓库自带 `runtime\`（便携 Python 3.14.7，含 pywebview / pystray）与 `calibre\`（精简版 Calibre）；`start.bat` 与 `server.py` 优先使用项目内依赖，找不到才回退系统安装。整个文件夹复制到任何 64 位 Windows 电脑即可运行，目标机器**无需预装 Python / Calibre**。
 
+## 界面预览
+
+![文字成书 · 主界面](screenshots/文字成书-主界面.png)
+
+![图片成漫画 · 界面](screenshots/图片成漫画-界面.png)
+
 ## 使用指南
 
 ### 文字成书
