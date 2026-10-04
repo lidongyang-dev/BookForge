@@ -656,6 +656,8 @@ def main():
             except KeyboardInterrupt:
                 pass
         else:
+            # WebView2 用户数据（缓存/LocalStorage）指到项目内，删文件夹即彻底清除
+            os.environ["WEBVIEW2_USER_DATA_FOLDER"] = str(BASE_DIR / "webview_data")
             webview.create_window(
                 "BookForge — 自制 Kindle 书籍工作台",
                 "http://127.0.0.1:%d" % port,

@@ -29,6 +29,9 @@ static/_backup/
 # ---- 本地启动快捷方式（含本机绝对路径，随便携包分发但不入库） ----
 BookForge.lnk
 
+# ---- WebView2 用户数据（运行时生成于项目内，随文件夹删除即清除） ----
+webview_data/
+
 # ---- 系统文件 ----
 Thumbs.db
 Desktop.ini
