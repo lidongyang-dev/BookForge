@@ -623,6 +623,23 @@ class Handler(BaseHTTPRequestHandler):
         }
 
 
+def _dotnet_framework_hint() -> str:
+    """Return a short status string about the installed .NET Framework 4.x."""
+    try:
+        import winreg
+        k = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
+                           r"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full")
+        release, _ = winreg.QueryValueEx(k, "Release")
+        winreg.CloseKey(k)
+        if release >= 528040:
+            return ".NET Framework 4.8 detected"
+        if release >= 461808:
+            return ".NET Framework 4.7.2+ detected (release %d)" % release
+        return ".NET Framework 4.x detected, but older than 4.7.2 (release %d)" % release
+    except OSError:
+        return ".NET Framework 4.x not detected"
+
+
 def main():
     import sys
     args = sys.argv[1:]
@@ -665,10 +682,24 @@ def main():
                 height=900,
                 min_size=(960, 640),
             )
-            webview.start()
-            server.shutdown()
-            server.server_close()
-            print("\nBookForge stopped.")
+            try:
+                webview.start()
+            except Exception as e:
+                # 桌面窗口后端(pythonnet)在目标机可能因缺 .NET Framework / WebView2 加载失败
+                print("  [desktop window unavailable] %s" % (e or "unknown error"))
+                print("  %s" % _dotnet_framework_hint())
+                print("  Desktop mode needs .NET Framework 4.8 and WebView2 Runtime.")
+                print("  Falling back to browser mode...")
+                import webbrowser
+                webbrowser.open("http://127.0.0.1:%d" % port)
+                try:
+                    server.serve_forever()
+                except KeyboardInterrupt:
+                    pass
+            else:
+                server.shutdown()
+                server.server_close()
+                print("\nBookForge stopped.")
     elif tray:
         import threading
         threading.Thread(target=server.serve_forever, daemon=True).start()
