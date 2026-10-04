@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """BookForge — EPUB 书籍生成核心（文字书 / 漫画书）。
 
-零第三方依赖：基于标准库 zipfile 手工构建 EPUB 3 文件结构，
+基于标准库 zipfile 手工构建 EPUB 3 文件结构，
 并附带 EPUB 2 风格 NCX 导航，以兼容旧款 Kindle 设备。
 
 结构（EPUB 本质是一个特定布局的 ZIP）：
@@ -1219,7 +1219,7 @@ def parse_epub(epub_path, max_nodes=3000):
            chapters, note_count, warnings}
     chapters 为 [{title, content, notes, children}] 树结构（content 含自动识别的
     〔N〕 标记与章末注释表 notes）。目录层级取自 EPUB3 nav 或 EPUB2 NCX，
-    缺失时按 spine 顺序平面导入。零第三方依赖（zipfile + ElementTree）。
+    缺失时按 spine 顺序平面导入（zipfile + ElementTree）。
     """
     epub_path = Path(epub_path)
     warnings = []
@@ -1483,7 +1483,7 @@ def parse_epub(epub_path, max_nodes=3000):
 
 
 # ---------------------------------------------------------------------------
-# DOCX 解析导入（零依赖：zipfile + ElementTree）
+# DOCX 解析导入（zipfile + ElementTree）
 # ---------------------------------------------------------------------------
 
 _DOCX_W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
@@ -1670,7 +1670,7 @@ def _docx_heading_level(p, style_names):
 
 
 def parse_docx(docx_path, max_nodes=3000):
-    """解析 DOCX -> BookForge 章节树与元数据（零第三方依赖）。
+    """解析 DOCX -> BookForge 章节树与元数据。
 
     返回: {title, authors, translators, publisher, pub_date, isbn,
            chapters, note_count, warnings}

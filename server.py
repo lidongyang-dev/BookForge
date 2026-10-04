@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""BookForge — 本地网页服务（零第三方依赖）。
+"""BookForge — 本地网页服务。
 
 启动：python server.py [port]
 默认端口 8777，浏览器访问 http://127.0.0.1:8777

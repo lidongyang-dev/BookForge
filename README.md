@@ -4,7 +4,7 @@
 
 自制 Kindle 支持格式（**EPUB / AZW3**）的书籍：把文字做成书、把图片做成漫画。
 
-本地网页工作台，数据不出本机，Python 零第三方依赖。
+本地网页工作台，数据不出本机。
 
 
 
@@ -274,7 +274,7 @@ bookforge/
 
 * **AZW3**：先产 EPUB，再调用 Calibre `ebook-convert` 转换（KF8 格式）
 
-* **零第三方依赖**：后端仅用 Python 标准库（http.server/zipfile /urllib/json 等），
+* **后端实现**：仅用 Python 标准库（http.server / zipfile / urllib / json 等），
 
   前端原生 JS 无框架
 
