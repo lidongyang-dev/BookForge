@@ -26,6 +26,9 @@ _*.epub
 static/_shots/
 static/_backup/
 
+# ---- 本地启动快捷方式（含本机绝对路径，随便携包分发但不入库） ----
+BookForge.lnk
+
 # ---- 系统文件 ----
 Thumbs.db
 Desktop.ini

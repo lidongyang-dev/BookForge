@@ -50,12 +50,13 @@ python server.py [端口]
 
 然后浏览器打开 [http://127.0.0.1:8777](http://127.0.0.1:8777)（端口可改，默认 8777）。
 
-> **两种运行模式**
+> **三种运行模式**
 >
-> - **桌面窗口（默认）**：`python server.py --desktop` —— 弹出原生桌面窗口（pywebview + 系统 WebView2 内核），关闭窗口即停止服务，无需打开浏览器
-> - **纯服务模式**：`python server.py [端口]` —— 只起本地服务，用浏览器访问
+> - **桌面窗口（GUI 完整版）**：双击 `BookForge.lnk`（快捷方式，无终端窗口）或 `python server.py --desktop` —— 弹出原生桌面窗口（pywebview + 系统 WebView2 内核），关闭窗口即停止服务
+> - **系统托盘（纯服务版）**：`python server.py --tray` 或双击 `start.bat` —— 服务在后台运行，右下角托盘区常驻 BookForge 图标：**左键单击打开网页**，**右键菜单"打开 BookForge / 退出"**
+> - **纯服务模式**：`python server.py [端口]` —— 只起本地服务，手动用浏览器访问
 >
-> `start.bat` 默认以桌面窗口模式启动。
+> GUI 完整版双击 `BookForge.lnk` 以无控制台方式运行（`pythonw.exe`），不再弹出终端窗口。
 
 > **便携模式**
 >
@@ -250,8 +251,8 @@ robocopy "C:\Program Files\Calibre2\app\plugins" calibre\app\plugins /E /MT:16
 
 | 包 | 内容 | 启动方式 |
 |---|---|---|
-| `BookForge-portable.zip`（GUI 完整版） | 含 pywebview 桌面窗口库（系统 WebView2） | 双击 `start.bat` 弹出原生窗口，无需浏览器 |
-| `BookForge-portable-browser.zip`（纯服务版） | 不含桌面窗口库，体积更小 | 双击 `start.bat` 自动打开浏览器访问 |
+| `BookForge-portable.zip`（GUI 完整版） | 含 pywebview 桌面窗口库（系统 WebView2） | 双击 `BookForge.lnk`（无终端窗口）或 `start.bat` |
+| `BookForge-portable-browser.zip`（纯服务版） | 不含桌面窗口库，含系统托盘（pystray） | 双击 `start.bat`，托盘图标常驻（左键开网页 / 右键退出） |
 
 两个包均含完整源码、便携 Python 与精简版 Calibre，解压即用；代码本身同时支持
 `python server.py --desktop`（桌面窗口）与 `python server.py`（纯服务）两种模式。

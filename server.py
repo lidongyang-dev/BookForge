@@ -627,6 +627,7 @@ def main():
     import sys
     args = sys.argv[1:]
     desktop = "--desktop" in args or "--gui" in args
+    tray = "--tray" in args
     port = 8777
     for a in args:
         if a.isdigit():
@@ -636,7 +637,7 @@ def main():
     print("=" * 52)
     print("  BookForge — Self-Hosted Kindle E-book Maker")
     print("  URL: http://127.0.0.1:%d" % port)
-    print("  Mode: %s" % ("desktop window (pywebview)" if desktop else "browser"))
+    print("  Mode: %s" % ("desktop window (pywebview)" if desktop else ("tray icon (pystray)" if tray else "browser")))
     print("  Calibre : %s" % (calibre or "not found (AZW3 conversion unavailable)"))
     print("  Press Ctrl+C to stop")
     print("=" * 52)
@@ -663,6 +664,40 @@ def main():
                 min_size=(960, 640),
             )
             webview.start()
+            server.shutdown()
+            server.server_close()
+            print("\nBookForge stopped.")
+    elif tray:
+        import threading
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        url = "http://127.0.0.1:%d" % port
+        try:
+            import pystray
+            from PIL import Image
+        except ImportError:
+            print("  [pystray unavailable] falling back to browser mode")
+            import webbrowser
+            webbrowser.open(url)
+            try:
+                server.serve_forever()
+            except KeyboardInterrupt:
+                pass
+        else:
+            import webbrowser
+
+            def _open(icon=None, item=None):
+                webbrowser.open(url)
+
+            def _quit(icon, item):
+                icon.stop()
+
+            img = Image.open(str(BASE_DIR / "BookForge.png"))
+            menu = pystray.Menu(
+                pystray.MenuItem("打开 BookForge", _open, default=True),
+                pystray.MenuItem("退出", _quit),
+            )
+            icon = pystray.Icon("BookForge", img, "BookForge — 自制 Kindle 书籍工作台", menu)
+            icon.run()
             server.shutdown()
             server.server_close()
             print("\nBookForge stopped.")
