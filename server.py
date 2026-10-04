@@ -14,10 +14,14 @@ import json
 import os
 import re
 import subprocess
+import sys
 import tempfile
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+
+# 便携 Python（embeddable）不会把脚本目录加入 sys.path，显式加入以导入同目录模块
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import epub_builder
 
@@ -26,7 +30,9 @@ STATIC_DIR = BASE_DIR / "static"
 OUTPUT_DIR = BASE_DIR / "output"
 # 静态文件白名单（防路径穿越，仅放行前端资源）
 STATIC_FILES = {"tree_ops.js": "application/javascript; charset=utf-8"}
+# 便携版（项目内 calibre/）优先；找不到再回退系统安装的 Calibre
 CALIBRE_CANDIDATES = [
+    str(BASE_DIR / "calibre" / "ebook-convert.exe"),
     r"C:\Program Files\Calibre2\ebook-convert.exe",
     r"C:\Program Files (x86)\Calibre2\ebook-convert.exe",
     str(Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "Calibre2" / "ebook-convert.exe"),
