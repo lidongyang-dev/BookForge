@@ -34,9 +34,13 @@
 
 ## 快速开始
 
-**GUI 完整版**（含桌面窗口）：解压后先双击 `创建桌面快捷方式.bat`，在桌面生成 BookForge 快捷方式（自动指向当前解压位置，不写死绝对路径）；之后双击桌面 BookForge 图标即可启动。也可直接双击 `start.bat`。
+**唯一便携包，三种启动方式任选**：
 
-**纯服务版**（系统托盘常驻）：双击 `start.bat` —— 右下角托盘区出现 BookForge 图标：左键单击打开网页，右键菜单"打开 BookForge / 退出"。
+| 方式 | 操作 |
+|---|---|
+| 桌面窗口 | 解压后双击 `创建桌面快捷方式.bat` 在桌面生成 BookForge 图标（自动指向当前解压位置，不写死绝对路径），之后双击图标启动；或直接双击 `start.bat` |
+| 系统托盘 | 命令行运行 `python server.py --tray`，托盘图标常驻（左键开网页 / 右键"打开 BookForge / 退出"） |
+| 浏览器 | 命令行运行 `python server.py [端口]`，浏览器访问 http://127.0.0.1:8777 |
 
 **命令行**（需 Python 3.8+）：
 
@@ -215,11 +219,9 @@ robocopy "C:\Program Files\Calibre2\app\plugins" calibre\app\plugins /E /MT:16
 
 | 包 | 内容 | 启动方式 |
 |---|---|---|
-| `BookForge-portable.zip`（GUI 完整版） | 含 pywebview 桌面窗口库（系统 WebView2） | 双击 `BookForge.lnk`（无终端窗口）或 `start.bat` |
-| `BookForge-portable-browser.zip`（纯服务版） | 不含桌面窗口库，含系统托盘（pystray） | 双击 `start.bat`，托盘图标常驻（左键开网页 / 右键退出） |
+| `BookForge-portable.zip`（唯一便携包） | 完整功能：桌面窗口（pywebview + WebView2）、系统托盘（pystray）、纯浏览器模式；含完整源码、便携 Python 3.14.7、精简版 Calibre | 双击 `创建桌面快捷方式.bat` 生成桌面图标后双击，或 `start.bat`（默认 `--desktop`）；命令行 `python server.py --tray` 托盘、`python server.py` 纯服务 |
 
-两个包均含完整源码、便携 Python 与精简版 Calibre，解压即用；代码本身同时支持
-`python server.py --desktop`（桌面窗口）与 `python server.py`（纯服务）两种模式。
+一个包即包含全部三种运行模式（桌面窗口 / 系统托盘 / 浏览器），解压即用；目标机缺 .NET Framework 4.8 时桌面窗口自动回退浏览器模式，功能不受影响。
 
 
 
