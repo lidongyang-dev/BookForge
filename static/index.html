@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BookForge · 自制 Kindle 书籍工作台</title>
+<style>
+  :root {
+    --paper: #f7f3ea;
+    --ink: #2c2a26;
+    --ink-soft: #6b675e;
+    --accent: #8a5a2b;
+    --accent-dark: #6e431f;
+    --line: #ddd5c4;
+    --card: #fffdf8;
+    --ok: #3d7a4e;
+    --err: #b3402f;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 40px 20px 80px; }
+
+  /* 页头 */
+  header { text-align: center; margin-bottom: 30px; }
+  .logo { font-size: 40px; font-weight: 700; letter-spacing: 1px; }
+  .logo span { color: var(--accent); }
+  .tagline { color: var(--ink-soft); margin-top: 6px; font-size: 14px; }
+
+  /* Tab */
+  .tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+  .tab {
+    flex: 1; padding: 13px 0; text-align: center; cursor: pointer;
+    border: 1px solid var(--line); border-radius: 10px; background: var(--card);
+    font-size: 15px; font-weight: 600; color: var(--ink-soft);
+    transition: all .15s ease;
+  }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab:hover:not(.active) { border-color: var(--accent); }
+
+  /* 卡片 */
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px; box-shadow: 0 2px 10px rgba(60,50,30,.05);
+  }
+  .pane { display: none; }
+  .pane.active { display: block; }
+
+  /* 表单 */
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--ink); }
+  .field label small { font-weight: 400; color: var(--ink-soft); }
+  input[type=text], select, textarea {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--line);
+    border-radius: 8px; font-size: 14px; background: #fff; color: var(--ink);
+    font-family: inherit; outline: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  .row { display: flex; gap: 14px; }
+  .row .field { flex: 1; }
+
+  /* 章节编辑器 */
+  .chapter {
+    border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin-bottom: 12px;
+    background: #fbf8f0;
+  }
+  .chapter-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .chapter-head .no { font-weight: 700; color: var(--accent); font-size: 14px; min-width: 42px; }
+  .chapter-head input { flex: 1; }
+  .btn-del {
+    border: none; background: transparent; color: var(--err); cursor: pointer;
+    font-size: 13px; padding: 6px 10px; border-radius: 6px;
+  }
+  .btn-del:hover { background: #f5e4e0; }
+  textarea { resize: vertical; min-height: 110px; }
+
+  /* 多级目录树编辑器 */
+  .tnode { margin-bottom: 8px; }
+  .trow { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+  .tno { font-weight: 700; color: var(--accent); font-size: 13px; min-width: 40px; flex-shrink: 0; }
+  .ttitle { flex: 1; padding: 8px 10px; }
+  .t-tag {
+    font-size: 11px; border: 1px solid var(--ok); color: var(--ok); background: #eef6ef;
+    border-radius: 4px; padding: 1px 7px; white-space: nowrap; flex-shrink: 0;
+  }
+  .t-tag.empty { border-color: var(--line); color: var(--ink-soft); background: #f6f2e8; }
+  .tbtns { display: flex; gap: 3px; flex-shrink: 0; }
+  .tbtns button {
+    border: 1px solid var(--line); background: #fff; color: var(--ink);
+    font-size: 12px; padding: 4px 8px; border-radius: 6px; cursor: pointer; line-height: 1.2;
+  }
+  .tbtns button:hover { border-color: var(--accent); color: var(--accent); }
+  .tbtns button.danger:hover { border-color: var(--err); color: var(--err); }
+  .tbody { margin-bottom: 4px; }
+  .tbody textarea { min-height: 76px; font-size: 13.5px; }
+  .tchildren { border-left: 1px dashed var(--line); margin-left: 20px; padding-left: 8px; }
+  .t-note {
+    font-size: 11px; border: 1px solid #b8943e; color: #8a6a1a; background: #faf3df;
+    border-radius: 4px; padding: 1px 7px; white-space: nowrap; flex-shrink: 0;
+  }
+  .import-hint { font-size: 13px; color: var(--ink-soft); }
+  .import-hint.ok { color: var(--ok); }
+  .import-hint.err { color: var(--err); }
+
+  /* 多人姓名 chip 输入 */
+  .chip-wrap {
+    display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px;
+    border: 1px solid var(--line); border-radius: 8px; background: #fff;
+    min-height: 42px; align-items: center;
+  }
+  .chip-wrap:focus-within { border-color: var(--accent); }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #f6efe2; border: 1px solid #e6d5b8; color: var(--accent-dark);
+    border-radius: 999px; padding: 4px 12px; font-size: 13px;
+  }
+  .chip button {
+    border: none; background: transparent; color: var(--ink-soft);
+    cursor: pointer; font-size: 13px; padding: 0; line-height: 1;
+  }
+  .chip button:hover { color: var(--err); }
+  .chip-input {
+    flex: 1; min-width: 140px; border: none; outline: none; padding: 4px 2px;
+    font-size: 14px; background: transparent; width: auto;
+  }
+
+  /* 版权页等可折叠附加区 */
+  details.extra {
+    margin: 10px 0 14px; border: 1px dashed var(--line); border-radius: 10px;
+    padding: 10px 14px; background: #fbfaf7;
+  }
+  details.extra summary {
+    cursor: pointer; font-size: 13px; color: var(--accent-dark);
+    font-weight: 600; user-select: none;
+  }
+
+  /* 通用按钮 */
+  .btn {
+    border: none; border-radius: 10px; padding: 13px 26px; font-size: 15px;
+    font-weight: 600; cursor: pointer; transition: all .15s ease;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-dark); }
+  .btn-primary:disabled { background: #b9a98f; cursor: wait; }
+  .btn-ghost {
+    background: transparent; border: 1px solid var(--line); color: var(--accent);
+    padding: 9px 18px; font-size: 14px;
+  }
+  .btn-ghost:hover { border-color: var(--accent); background: #fbf6ee; }
+  .btn-block { width: 100%; margin-top: 18px; }
+
+  /* 格式勾选 */
+  .formats { display: flex; gap: 18px; margin-top: 4px; }
+  .formats label {
+    display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;
+    font-weight: 500; color: var(--ink);
+  }
+  input[type=checkbox] { width: 17px; height: 17px; accent-color: var(--accent); }
+
+  /* 上传区 */
+  .drop {
+    border: 2px dashed var(--line); border-radius: 12px; padding: 34px 20px;
+    text-align: center; cursor: pointer; transition: all .15s; background: #fbf8f0;
+  }
+  .drop:hover, .drop.over { border-color: var(--accent); background: #f6efe2; }
+  .drop .big { font-size: 34px; color: var(--accent); line-height: 1; margin-bottom: 8px; }
+  .drop p { color: var(--ink-soft); font-size: 14px; }
+  .drop p b { color: var(--ink); }
+
+  /* 图片列表 */
+  .img-list { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .img-item {
+    display: flex; align-items: center; gap: 12px; padding: 8px 10px;
+    border: 1px solid var(--line); border-radius: 10px; background: #fff;
+    cursor: grab;
+  }
+  .img-item.dragging { opacity: .5; }
+  .img-item.over { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(138,90,43,.15); }
+  .img-item img { width: 52px; height: 68px; object-fit: cover; border-radius: 6px; background: #eee; }
+  .img-item .meta { flex: 1; font-size: 13px; color: var(--ink-soft); }
+  .img-item .meta .no { color: var(--accent); font-weight: 700; margin-right: 6px; }
+  .img-item .handle { color: #c0b9a8; font-size: 16px; }
+
+  /* 封面预览 */
+  .cover-preview { margin-top: 8px; display: none; }
+  .cover-preview img { max-height: 150px; border-radius: 8px; border: 1px solid var(--line); }
+
+  /* 状态与结果 */
+  .status { display: none; margin-top: 16px; padding: 13px 16px; border-radius: 10px; font-size: 14px; }
+  .status.error { display: block; background: #f9e8e4; color: var(--err); border: 1px solid #ecc9c1; }
+  .status.running { display: block; background: #f6efe2; color: var(--accent-dark); border: 1px solid #e6d5b8; }
+  .status.ok { display: block; background: #e6f2e8; color: var(--ok); border: 1px solid #c4e0ca; }
+  .spinner {
+    display: inline-block; width: 14px; height: 14px; margin-right: 8px;
+    border: 2px solid var(--accent); border-top-color: transparent; border-radius: 50%;
+    animation: spin .8s linear infinite; vertical-align: -2px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .results { display: none; margin-top: 16px; }
+  .results .head { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+  .result-item {
+    display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+    border: 1px solid var(--line); border-radius: 10px; background: #fff;
+    margin-bottom: 8px;
+  }
+  .result-item .fmt-badge {
+    background: var(--accent); color: #fff; font-size: 12px; font-weight: 700;
+    padding: 4px 10px; border-radius: 6px; min-width: 48px; text-align: center;
+  }
+  .result-item .fname { flex: 1; font-size: 14px; font-weight: 600; word-break: break-all; }
+  .result-item .fsize { color: var(--ink-soft); font-size: 13px; }
+  .dl {
+    background: var(--ok); color: #fff; text-decoration: none; font-size: 13px;
+    font-weight: 600; padding: 8px 16px; border-radius: 8px;
+  }
+  .dl:hover { opacity: .88; }
+  footer { text-align: center; color: #a89f8c; font-size: 12px; margin-top: 34px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">Book<span>Forge</span></div>
+    <div class="tagline">自制 Kindle 支持格式（EPUB / AZW3）的书籍 · 文字成书 · 图片成漫</div>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" data-pane="text">文字成书</div>
+    <div class="tab" data-pane="comic">图片成漫画</div>
+  </div>
+
+  <!-- ===================== 文字书 ===================== -->
+  <div class="card">
+    <div class="pane active" id="pane-text">
+      <div class="row">
+        <div class="field"><label>书名</label><input type="text" id="t-title" placeholder="例如：我的短篇集"></div>
+        <div class="field"><label>语言</label>
+          <select id="t-lang">
+            <option value="zh">简体中文</option>
+            <option value="en">English</option>
+            <option value="ja">日本語</option>
+            <option value="ko">한국어</option>
+            <option value="fr">Français</option>
+            <option value="de">Deutsch</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>排版 <small>随语言自动设置默认，可手动调整</small></label>
+          <div class="formats">
+            <label><input type="checkbox" id="t-indent" checked> 首行缩进 2 字符</label>
+            <label><input type="checkbox" id="t-blank-para"> 空行分段（不勾选＝每个回车即新段）</label>
+          </div>
+          <div class="formats" style="margin-top:6px">
+            <label>注释形式
+              <select id="t-notes-mode">
+                <option value="chapter">章末脚注（每章末尾注释区）</option>
+                <option value="endbook">书末注释（全书统一编号，书末"注释"章节）</option>
+              </select>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field"><label>著者 <small>可多人，输入后回车添加</small></label>
+          <div class="chip-wrap" id="t-authors"><input type="text" class="chip-input" placeholder="如：马克思"></div>
+        </div>
+        <div class="field"><label>译者 <small>可选 · 可多人</small></label>
+          <div class="chip-wrap" id="t-translators"><input type="text" class="chip-input" placeholder="如：郭大力"></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>封面（可选）<small> · JPG/PNG/GIF</small></label>
+          <input type="file" id="t-cover" accept="image/jpeg,image/png,image/gif">
+          <div class="cover-preview" id="t-cover-preview"><img alt="封面预览"></div>
+        </div>
+      </div>
+
+      <details class="extra">
+        <summary>版权页（可选）</summary>
+        <div class="row">
+          <div class="field"><label>出版社</label><input type="text" id="t-publisher" placeholder="如：人民出版社"></div>
+          <div class="field"><label>出版时间 <small>可选 · 可只填年份或精确到日</small></label><input type="text" id="t-year" placeholder="如：2026 或 2026-10-03"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>ISBN <small>可选</small></label><input type="text" id="t-isbn" placeholder="如：978-7-01-000000-0"></div>
+          <div class="field"><label>　</label><span class="import-hint">生成时自动补全 © 声明与“本书由 BookForge 制作”</span></div>
+        </div>
+      </details>
+
+      <div class="field">
+        <label>从文件导入 <small> · TXT：一篇追加一个章节（多选连续导入，自动识别注释）；EPUB：解析整本（多级目录/注释/著译者元数据），导入后替换当前目录；DOCX：解析 Word 文档（标题样式还原多级目录、脚注转注释），导入后替换当前目录</small></label>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-ghost" id="t-import" type="button">选择 TXT 文件…</button>
+          <button class="btn btn-ghost" id="t-import-epub" type="button">导入 EPUB…</button>
+          <button class="btn btn-ghost" id="t-import-docx" type="button">导入 DOCX…</button>
+          <input type="file" id="t-import-file" accept=".txt,text/plain" multiple style="display:none">
+          <input type="file" id="t-import-epub-file" accept=".epub,application/epub+zip" style="display:none">
+          <input type="file" id="t-import-docx-file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display:none">
+          <span class="import-hint" id="t-import-status"></span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>目录与正文 <small> · 多级目录：卷/篇/章/节；有正文的条目生成页面，留空则仅作分类层级；空行自动分段</small></label>
+        <div id="t-chapters"></div>
+        <button class="btn btn-ghost" id="t-add-chapter" type="button">＋ 添加卷 / 章</button>
+      </div>
+
+      <div class="field">
+        <label>输出格式</label>
+        <div class="formats">
+          <label><input type="checkbox" id="t-epub" checked> EPUB（通用，新版 Kindle 原生支持）</label>
+          <label><input type="checkbox" id="t-azw3"> AZW3（老款 Kindle 兼容，经 Calibre 转换）</label>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-block" id="t-build" type="button">锻造这本书</button>
+      <div class="status" id="t-status"></div>
+      <div class="results" id="t-results"><div class="head">锻造完成，下载你的书：</div></div>
+    </div>
+
+    <!-- ===================== 漫画书（同一卡片，tab 互斥切换） ===================== -->
+    <div class="pane" id="pane-comic" style="display:none">
+      <div class="row">
+        <div class="field"><label>书名</label><input type="text" id="c-title" placeholder="例如：我的漫画集"></div>
+        <div class="field"><label>语言</label>
+          <select id="c-lang">
+            <option value="zh">简体中文</option>
+            <option value="en">English</option>
+            <option value="ja">日本語</option>
+            <option value="ko">한국어</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field"><label>著者 <small>可多人，输入后回车添加</small></label>
+          <div class="chip-wrap" id="c-authors"><input type="text" class="chip-input" placeholder="如：手冢治虫"></div>
+        </div>
+        <div class="field"><label>译者 <small>可选 · 可多人</small></label>
+          <div class="chip-wrap" id="c-translators"><input type="text" class="chip-input" placeholder="如：林一"></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>输出格式</label>
+          <div class="formats">
+            <label><input type="checkbox" id="c-epub" checked> EPUB</label>
+            <label><input type="checkbox" id="c-azw3"> AZW3</label>
+          </div>
+        </div>
+      </div>
+
+      <details class="extra">
+        <summary>版权页（可选）</summary>
+        <div class="row">
+          <div class="field"><label>出版社</label><input type="text" id="c-publisher" placeholder="如：人民美术出版社"></div>
+          <div class="field"><label>出版时间 <small>可选 · 可只填年份或精确到日</small></label><input type="text" id="c-year" placeholder="如：2026 或 2026-10-03"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>ISBN <small>可选</small></label><input type="text" id="c-isbn" placeholder="如：978-7-02-000000-0"></div>
+          <div class="field"><label>　</label><span class="import-hint">生成时自动补全 © 声明与“本书由 BookForge 制作”</span></div>
+        </div>
+      </details>
+
+      <div class="field">
+        <label>漫画页面图片 <small> · JPG/PNG/GIF，按顺序阅读；上传后可拖动排序；第一张同时用作封面</small></label>
+        <div class="drop" id="c-drop">
+          <div class="big">⤴</div>
+          <p><b>拖拽图片到这里</b>，或点击选择文件（可多选）</p>
+        </div>
+        <input type="file" id="c-file" accept="image/jpeg,image/png,image/gif" multiple style="display:none">
+        <div class="img-list" id="c-list"></div>
+      </div>
+
+      <button class="btn btn-primary btn-block" id="c-build" type="button">锻造这本漫画</button>
+      <div class="status" id="c-status"></div>
+      <div class="results" id="c-results"><div class="head">锻造完成，下载你的书：</div></div>
+    </div>
+  </div>
+
+  <footer>BookForge · 本地运行 · 数据不出本机 · 零第三方依赖</footer>
+</div>
+
+<script src="tree_ops.js"></script>
+<script>
+"use strict";
+/* ---------------- 通用 ---------------- */
+const $ = (id) => document.getElementById(id);
+
+function statusEl(id) {
+  const el = $(id);
+  return {
+    run(msg)  { el.className = "status running"; el.innerHTML = '<span class="spinner"></span>' + msg; el.style.display = "block"; },
+    ok(msg)   { el.className = "status ok";      el.textContent = msg; },
+    err(msg)  { el.className = "status error";   el.textContent = msg; },
+    hide()    { el.style.display = "none"; }
+  };
+}
+
+function showResults(id, files) {
+  const box = $(id);
+  box.style.display = "block";
+  box.querySelector(".head").textContent = "锻造完成，下载你的书：";
+  box.querySelectorAll(".result-item").forEach(n => n.remove());
+  for (const f of files) {
+    const item = document.createElement("div");
+    item.className = "result-item";
+    item.innerHTML =
+      '<span class="fmt-badge">' + f.fmt + '</span>' +
+      '<span class="fname">' + escapeHtml(f.name) + '</span>' +
+      '<span class="fsize">' + fmtSize(f.size) + '</span>' +
+      '<a class="dl" href="' + f.url + '" download="' + escapeHtml(f.name) + '">下载</a>';
+    box.appendChild(item);
+  }
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+}
+function fmtSize(bytes) {
+  if (bytes >= 1024*1024) return (bytes/1024/1024).toFixed(1) + " MB";
+  if (bytes >= 1024) return (bytes/1024).toFixed(1) + " KB";
+  return bytes + " B";
+}
+
+/* ---------------- Tab 切换 ---------------- */
+function showPane(id) {
+  document.querySelectorAll(".pane").forEach(p => {
+    const on = p.id === id;
+    p.classList.toggle("active", on);
+    p.style.display = on ? "block" : "none";   // 内联样式双保险，与 CSS 类无关
+  });
+}
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    tab.classList.add("active");
+    showPane("pane-" + tab.dataset.pane);
+  });
+});
+showPane("pane-text");  // 页面加载时同步一次
+
+/* ---------------- 文字书（多级目录树） ---------------- */
+/* 多人著者/译者 chip 输入（支持导入回填） */
+const tAuthors = [], tTranslators = [], cAuthors = [], cTranslators = [];
+function initChip(id, list) {
+  const wrap = $(id);
+  const input = wrap.querySelector(".chip-input");
+  wrap._list = list;
+  const render = () => {
+    wrap.querySelectorAll(".chip").forEach(c => c.remove());
+    wrap._list.forEach((v, i) => {
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      chip.textContent = v;
+      const x = document.createElement("button");
+      x.type = "button";
+      x.textContent = "×";
+      x.title = "移除";
+      x.addEventListener("click", () => { wrap._list.splice(i, 1); render(); });
+      chip.appendChild(x);
+      wrap.insertBefore(chip, input);
+    });
+  };
+  if (!wrap.dataset.bound) {
+    const add = () => {
+      const v = input.value.trim();
+      if (v && !wrap._list.includes(v)) { wrap._list.push(v); input.value = ""; render(); }
+    };
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === "," || e.key === "，") { e.preventDefault(); add(); }
+    });
+    input.addEventListener("blur", add);
+    wrap.dataset.bound = "1";
+  }
+  wrap._render = render;
+  render();
+}
+function setChips(id, newList) {
+  const wrap = $(id);
+  wrap._list.length = 0;
+  (newList || []).forEach(x => { if (x && !wrap._list.includes(x)) wrap._list.push(x); });
+  wrap._render();
+}
+initChip("t-authors", tAuthors);
+initChip("t-translators", tTranslators);
+initChip("c-authors", cAuthors);
+initChip("c-translators", cTranslators);
+
+let treeSeq = 1;
+function newNode() { return { id: treeSeq++, title: "", content: "", children: [] }; }
+let tree = [newNode()];
+
+function renderNode(node, path) {
+  const depth = path.length;
+  const div = document.createElement("div");
+  div.className = "tnode";
+  div.dataset.id = node.id;
+  const hasContent = (node.content || "").trim();
+  div.innerHTML =
+    '<div class="trow" style="padding-left:' + ((depth - 1) * 24) + 'px">' +
+      '<span class="tno">' + path.join(".") + '</span>' +
+      '<input class="ttitle" placeholder="标题（如：第一卷 / 第一篇 / 第一章 / 第一节）" value="' + escapeHtml(node.title) + '">' +
+      '<span class="t-tag' + (hasContent ? "" : " empty") + '">' + (hasContent ? "正文" : "目录层级") + '</span>' +
+      ((node.notes && Object.keys(node.notes).length) ? '<span class="t-note">' + Object.keys(node.notes).length + ' 条注</span>' : "") +
+      '<div class="tbtns">' +
+        '<button data-act="child" title="添加子级（下一层）">+子</button>' +
+        '<button data-act="after" title="添加同级（后面）">+后</button>' +
+        '<button data-act="up" title="上移">↑</button>' +
+        '<button data-act="down" title="下移">↓</button>' +
+        '<button data-act="promote" title="提升层级（变为父级层级，紧跟其后）">升层</button>' +
+        '<button data-act="demote" title="降低层级（归入前一个同级条目之下）">降层</button>' +
+        '<button data-act="del" class="danger" title="删除（连同子级）">删</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="tbody" style="padding-left:' + ((depth - 1) * 24) + 'px">' +
+      '<textarea class="tcontent" placeholder="正文（纯文本，空行自动分段）。若留空，则本条仅作为目录分类层级。">' + escapeHtml(node.content) + '</textarea>' +
+    '</div>' +
+    '<div class="tchildren"></div>';
+  div.querySelector(".ttitle").addEventListener("input", e => node.title = e.target.value);
+  div.querySelector(".tcontent").addEventListener("input", e => node.content = e.target.value);
+  const childBox = div.querySelector(".tchildren");
+  node.children.forEach((c, i) => childBox.appendChild(renderNode(c, path.concat(i + 1))));
+  return div;
+}
+
+function renderTree() {
+  const box = $("t-chapters");
+  box.innerHTML = "";
+  tree.forEach((n, i) => box.appendChild(renderNode(n, [i + 1])));
+  updateTreeStats();
+}
+
+/* 树统计与编号（EPUB 导入回填用） */
+function countTree(nodes) {
+  let nodesN = 0, pagesN = 0;
+  (function walk(ns) {
+    ns.forEach(n => {
+      nodesN++;
+      if ((n.content || "").trim()) pagesN++;
+      walk(n.children || []);
+    });
+  })(nodes || []);
+  return { nodes: nodesN, pages: pagesN };
+}
+
+function renumber(nodes) {
+  (function walk(ns) {
+    ns.forEach(n => {
+      n.id = treeSeq++;
+      walk(n.children || []);
+    });
+  })(nodes || []);
+}
+
+function updateTreeStats() {
+  let total = 0, pages = 0;
+  (function walk(nodes) {
+    nodes.forEach(n => {
+      total++;
+      if ((n.content || "").trim()) pages++;
+      walk(n.children);
+    });
+  })(tree);
+  const label = $("t-chapters").previousElementSibling; // label 元素
+  if (label) {
+    label.innerHTML = "目录与正文 <small> · 多级目录：卷/篇/章/节；有正文的条目生成页面，留空则仅作分类层级；空行自动分段 —— 当前共 " +
+      total + " 条，其中 " + pages + " 个正文页</small>";
+  }
+}
+
+function cleanNode(n) {
+  return {
+    title: n.title, content: n.content, notes: n.notes || {},
+    title_marks: n.title_marks || [], _plain_notes: !!n._plain_notes,
+    children: n.children.map(cleanNode)
+  };
+}
+
+/* 树操作（事件委托） */
+$("t-chapters").addEventListener("click", e => {
+  const btn = e.target.closest("button[data-act]");
+  if (!btn) return;
+  const tnode = btn.closest(".tnode");
+  const id = Number(tnode.dataset.id);
+  const hit = findNodeIn(tree, id);
+  if (!hit) return;
+  const act = btn.dataset.act;
+  const { node, parent, idx } = hit;
+  if (act === "child") {
+    node.children.push(newNode());
+  } else if (act === "after") {
+    parent.splice(idx + 1, 0, newNode());
+  } else if (act === "up") {
+    if (idx > 0) { parent.splice(idx, 1); parent.splice(idx - 1, 0, node); }
+  } else if (act === "down") {
+    if (idx < parent.length - 1) { parent.splice(idx, 1); parent.splice(idx + 1, 0, node); }
+  } else if (act === "promote") {
+    const r = treePromote(tree, id);
+    if (!r.ok) { alert(r.msg); return; }
+  } else if (act === "demote") {
+    const r = treeDemote(tree, id);
+    if (!r.ok) { alert(r.msg); return; }
+  } else if (act === "del") {
+    if (!confirm("删除「" + (node.title || "未命名") + "」及其全部子级？")) return;
+    parent.splice(idx, 1);
+    if (!tree.length) tree.push(newNode());
+  }
+  renderTree();
+});
+
+$("t-add-chapter").addEventListener("click", () => { tree.push(newNode()); renderTree(); });
+
+/* ---------------- TXT 导入（注释感知解析） ---------------- */
+const CIRCLED = { "①":"1","②":"2","③":"3","④":"4","⑤":"5","⑥":"6","⑦":"7","⑧":"8","⑨":"9","⑩":"10","⑪":"11","⑫":"12","⑬":"13","⑭":"14","⑮":"15","⑯":"16","⑰":"17","⑱":"18","⑲":"19","⑳":"20" };
+
+function readTxt(file) {
+  /* 优先 UTF-8，出现替换符则按 GBK 重读（兼容国产 txt） */
+  return new Promise(resolve => {
+    const r1 = new FileReader();
+    r1.onload = () => {
+      const text = r1.result || "";
+      if (text.includes("\uFFFD")) {
+        const r2 = new FileReader();
+        r2.onload = () => resolve(r2.result || text);
+        r2.onerror = () => resolve(text);
+        r2.readAsText(file, "gbk");
+      } else {
+        resolve(text);
+      }
+    };
+    r1.onerror = () => resolve("");
+    r1.readAsText(file, "utf-8");
+  });
+}
+
+function normalizeNoteMarks(line, notes) {
+  /* 〔N〕保持；[N] 与圈号转 〔N〕——仅当编号在注释表中（防误伤正文方括号） */
+  let out = line.replace(/[〔\[](\d{1,4})[〕\]]/g, (m, n) => notes[n] ? "〔" + n + "〕" : m);
+  out = out.replace(/[①-⑳]/g, ch => {
+    const n = CIRCLED[ch];
+    return notes[n] ? "〔" + n + "〕" : ch;
+  });
+  return out;
+}
+
+function parseTxt(text) {
+  /* 返回 { body, notes, problems, noteCount } */
+  const lines = text.split(/\r?\n/);
+  const notes = {};
+  const problems = [];
+  const bodyLines = [];
+  let inNotes = false;
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+    // 注释区标题行：注释 / 注 / 【注释】 / 注释：
+    if (!inNotes && /^[【\[]?(注释|注|脚注)[】\]]?[：:]?$/.test(line)) {
+      inNotes = true;
+      continue;
+    }
+    const mEntry = /^[〔\[](\d{1,4})[〕\]](.*)$/.exec(line);
+    const mCircle = /^([①-⑳])(.*)$/.exec(line);
+    if (inNotes) {
+      if (mEntry || mCircle) {
+        let no = mEntry ? mEntry[1] : CIRCLED[mCircle[1]];
+        const tail = (mEntry ? mEntry[2] : mCircle[2]).trim();
+        if (notes[no]) problems.push("注释 " + no + " 重复定义，已覆盖");
+        notes[no] = tail;
+      } else if (/^（.+）$/.test(line)) {
+        // 整行圆括号括注（题解/编者说明）：注释区结束，归为正文
+        inNotes = false;
+        bodyLines.push(line);
+      } else if (Object.keys(notes).length) {
+        const last = Object.keys(notes).pop();
+        notes[last] += "\n" + line;   // 注释多行续接
+      } else {
+        bodyLines.push(line);
+      }
+      continue;
+    }
+    // 段后注：正文行以〔N〕开头（圈号开头的整行是正文序号，不当作注释）
+    if (mEntry) {
+      if (!notes[mEntry[1]]) notes[mEntry[1]] = mEntry[2].trim();
+      continue;
+    }
+    bodyLines.push(line);
+  }
+  const body = bodyLines.map(l => normalizeNoteMarks(l, notes)).join("\n\n");
+  return { body, notes, problems, noteCount: Object.keys(notes).length };
+}
+
+function normalizeMarksLoose(line) {
+  /* 无注释表时的纯外观统一：〔N〕/[N]/圈号 -> 〔N〕（不配对，生成时保留原样） */
+  let out = line.replace(/[〔\[](\d{1,4})[〕\]]/g, (m, n) => "〔" + n + "〕");
+  out = out.replace(/[①-⑳]/g, ch => "〔" + CIRCLED[ch] + "〕");
+  return out;
+}
+
+function tidyChapter(node) {
+  /* 提交前自动整理单个章节：粘贴的文本若含注释区（“注释”标题 + 〔N〕条目），
+     提取为 notes 并从正文剥离；无注释区则仅统一标记外观。返回识别注释条数。 */
+  if (!node.content || !node.content.trim()) return 0;
+  if (node.notes && Object.keys(node.notes).length) return 0;  // 已有注释表（导入），不重复解析
+  const r = parseTxt(node.content);
+  if (r.noteCount > 0) {
+    node.notes = r.notes;
+    node.content = r.body;
+    return r.noteCount;
+  }
+  node.content = node.content.split(/\r?\n/).map(l => normalizeMarksLoose(l)).join("\n");
+  return 0;
+}
+
+function tidyTree() {
+  let total = 0;
+  (function walk(nodes) {
+    nodes.forEach(n => {
+      total += tidyChapter(n);
+      walk(n.children);
+    });
+  })(tree);
+  return total;
+}
+
+$("t-import").addEventListener("click", () => $("t-import-file").click());
+$("t-import-file").addEventListener("change", async e => {
+  const files = [...e.target.files];
+  const st = $("t-import-status");
+  if (!files.length) return;
+  let imported = 0, notesTotal = 0;
+  const probs = [];
+  for (const f of files) {
+    const text = await readTxt(f);
+    const r = parseTxt(text);
+    const name = (f.name.replace(/\.txt$/i, "") || "未命名").trim();
+    tree.push({ id: treeSeq++, title: name, content: r.body, children: [], notes: r.notes });
+    imported++;
+    notesTotal += r.noteCount;
+    for (const p of r.problems) probs.push(f.name + "：" + p);
+  }
+  renderTree();
+  e.target.value = "";
+  st.className = "import-hint ok";
+  st.textContent = "已导入 " + imported + " 篇，共识别 " + notesTotal + " 条注释" +
+    (probs.length ? " · 注意：" + probs.join("；") : "");
+});
+$("t-import-epub").addEventListener("click", () => $("t-import-epub-file").click());
+$("t-import-epub-file").addEventListener("change", async e => {
+  const file = e.target.files[0];
+  const st = $("t-import-status");
+  if (!file) return;
+  st.className = "import-hint";
+  st.textContent = "正在解析 EPUB…";
+  const fd = new FormData();
+  fd.append("file", file);
+  try {
+    const resp = await fetch("/api/import-epub", { method: "POST", body: fd });
+    const json = await resp.json();
+    if (!json.ok) {
+      st.className = "import-hint err";
+      st.textContent = "EPUB 导入失败：" + (json.error || "未知错误");
+      return;
+    }
+    const m = json.meta;
+    $("t-title").value = m.title || "";
+    setChips("t-authors", m.authors || []);
+    setChips("t-translators", m.translators || []);
+    if (m.publisher) $("t-publisher").value = m.publisher;
+    if (m.pub_date) $("t-year").value = m.pub_date; else if (m.pub_year) $("t-year").value = m.pub_year;
+    if (m.isbn) $("t-isbn").value = m.isbn;
+    tree = m.chapters || [];
+    treeSeq = 1;
+    renumber(tree);
+    renderTree();
+    const cnt = countTree(tree);
+    st.className = "import-hint ok";
+    st.textContent = "已导入《" + (m.title || "未命名") + "》：目录 " + cnt.nodes +
+      " 项 / 正文 " + cnt.pages + " 页" +
+      (m.note_count ? "，含 " + m.note_count + " 条注释" : "") +
+      (m.warnings && m.warnings.length ? " · " + m.warnings.length + " 个章节解析告警（详见正文）" : "") +
+      "（已替换当前目录）";
+  } catch (err) {
+    st.className = "import-hint err";
+    st.textContent = "EPUB 导入失败：" + err.message;
+  } finally {
+    e.target.value = "";
+  }
+});
+
+/* DOCX 导入：解析 Word 文档（标题还原目录、脚注转注释），替换当前目录 */
+$("t-import-docx").addEventListener("click", () => $("t-import-docx-file").click());
+$("t-import-docx-file").addEventListener("change", async e => {
+  const file = e.target.files[0];
+  const st = $("t-import-status");
+  if (!file) return;
+  st.className = "import-hint";
+  st.textContent = "正在解析 DOCX…";
+  const fd = new FormData();
+  fd.append("file", file);
+  try {
+    const resp = await fetch("/api/import-docx", { method: "POST", body: fd });
+    const json = await resp.json();
+    if (!json.ok) {
+      st.className = "import-hint err";
+      st.textContent = "DOCX 导入失败：" + (json.error || "未知错误");
+      return;
+    }
+    const m = json.meta;
+    $("t-title").value = m.title || "";
+    setChips("t-authors", m.authors || []);
+    setChips("t-translators", []);
+    tree = m.chapters || [];
+    treeSeq = 1;
+    renumber(tree);
+    renderTree();
+    const cnt = countTree(tree);
+    st.className = "import-hint ok";
+    st.textContent = "已导入《" + (m.title || "未命名") + "》：目录 " + cnt.nodes +
+      " 项 / 正文 " + cnt.pages + " 页" +
+      (m.note_count ? "，含 " + m.note_count + " 条注释" : "") +
+      (m.warnings && m.warnings.length ? " · " + m.warnings.length + " 个解析告警" : "") +
+      "（已替换当前目录）";
+  } catch (err) {
+    st.className = "import-hint err";
+    st.textContent = "DOCX 导入失败：" + err.message;
+  } finally {
+    e.target.value = "";
+  }
+});
+
+/* 封面预览 */
+$("t-cover").addEventListener("change", e => {
+  const file = e.target.files[0];
+  const pv = $("t-cover-preview");
+  if (!file) { pv.style.display = "none"; return; }
+  pv.querySelector("img").src = URL.createObjectURL(file);
+  pv.style.display = "block";
+});
+
+/* 排版默认值随语言：中文=缩进开+回车换段；英文=无缩进+空行分段 */
+function applyLangDefaults(lang) {
+  const zh = lang === "zh";
+  $("t-indent").checked = zh;
+  $("t-blank-para").checked = !zh;
+}
+$("t-lang").addEventListener("change", () => applyLangDefaults($("t-lang").value));
+
+/* 生成文字书 */
+$("t-build").addEventListener("click", async () => {
+  const st = statusEl("t-status");
+  const btn = $("t-build");
+  const data = new FormData();
+  data.append("type", "text");
+  data.append("title", $("t-title").value.trim() || "未命名书籍");
+  data.append("authors", JSON.stringify(tAuthors));
+  data.append("translators", JSON.stringify(tTranslators));
+  data.append("publisher", $("t-publisher").value.trim());
+  data.append("pub_date", $("t-year").value.trim());
+  data.append("isbn", $("t-isbn").value.trim());
+  data.append("indent_2em", $("t-indent").checked ? "1" : "0");
+  data.append("split_mode", $("t-blank-para").checked ? "blank" : "line");
+  data.append("notes_mode", $("t-notes-mode").value);
+  data.append("language", $("t-lang").value);
+  data.append("epub", $("t-epub").checked ? "1" : "0");
+  data.append("azw3", $("t-azw3").checked ? "1" : "0");
+  data.append("chapters", JSON.stringify(tree.map(cleanNode)));
+  const cover = $("t-cover").files[0];
+  if (cover) data.append("cover", cover);
+
+  btn.disabled = true;
+  $("t-results").style.display = "none";
+  // 提交前自动整理注释（直接粘贴的文本也支持识别）
+  const notesCount = tidyTree();
+  renderTree();
+  st.run("正在锻造" + (notesCount ? "（已自动识别 " + notesCount + " 条注释）" : "") +
+    ($("t-azw3").checked ? "（AZW3 转换可能需要几分钟）……" : "……"));
+  try {
+    const resp = await fetch("/api/build", { method: "POST", body: data });
+    const json = await resp.json();
+    if (json.ok) {
+      st.ok("✓ 已生成《" + json.title + "》");
+      showResults("t-results", json.files);
+    } else {
+      st.err("✗ " + (json.error || "生成失败"));
+    }
+  } catch (err) {
+    st.err("✗ 网络错误：" + err.message);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+/* ---------------- 漫画书 ---------------- */
+let comicFiles = [];   // File 数组，顺序即页码
+
+const drop = $("c-drop"), fileInput = $("c-file");
+drop.addEventListener("click", () => fileInput.click());
+["dragover", "dragenter"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", e => {
+  if (e.dataTransfer && e.dataTransfer.files.length) addImages([...e.dataTransfer.files]);
+});
+fileInput.addEventListener("change", () => { addImages([...fileInput.files]); fileInput.value = ""; });
+
+function addImages(files) {
+  const okTypes = ["image/jpeg", "image/png", "image/gif"];
+  for (const f of files) {
+    if (!okTypes.includes(f.type)) { alert("不支持的格式：" + f.name + "（仅支持 JPG/PNG/GIF）"); continue; }
+    comicFiles.push(f);
+  }
+  renderComicList();
+}
+
+function renderComicList() {
+  const list = $("c-list");
+  list.innerHTML = "";
+  comicFiles.forEach((f, i) => {
+    const item = document.createElement("div");
+    item.className = "img-item";
+    item.draggable = true;
+    item.dataset.idx = i;
+    item.innerHTML =
+      '<img src="' + URL.createObjectURL(f) + '" alt="">' +
+      '<div class="meta"><span class="no">第 ' + (i+1) + ' 页</span>' + escapeHtml(f.name) +
+      '<br>' + fmtSize(f.size) + '</div>' +
+      '<button class="btn-del" type="button">删除</button>';
+    item.querySelector(".btn-del").addEventListener("click", () => {
+      comicFiles.splice(i, 1);
+      renderComicList();
+    });
+    list.appendChild(item);
+  });
+}
+
+/* 拖拽排序 */
+$("c-list").addEventListener("dragstart", e => {
+  const item = e.target.closest(".img-item");
+  if (!item) return;
+  item.classList.add("dragging");
+  e.dataTransfer.setData("text/plain", item.dataset.idx);
+  e.dataTransfer.effectAllowed = "move";
+});
+$("c-list").addEventListener("dragover", e => {
+  e.preventDefault();
+  const over = e.target.closest(".img-item");
+  if (over) { e.dataTransfer.dropEffect = "move"; over.classList.add("over"); }
+});
+$("c-list").addEventListener("dragleave", e => {
+  const over = e.target.closest(".img-item");
+  if (over) over.classList.remove("over");
+});
+$("c-list").addEventListener("drop", e => {
+  e.preventDefault();
+  const over = e.target.closest(".img-item");
+  document.querySelectorAll(".img-item").forEach(n => n.classList.remove("over", "dragging"));
+  if (!over) return;
+  const from = parseInt(e.dataTransfer.getData("text/plain"), 10);
+  const to = parseInt(over.dataset.idx, 10);
+  if (isNaN(from) || isNaN(to) || from === to) return;
+  const moved = comicFiles.splice(from, 1)[0];
+  comicFiles.splice(to, 0, moved);
+  renderComicList();
+});
+
+/* 生成漫画书 */
+$("c-build").addEventListener("click", async () => {
+  const st = statusEl("c-status");
+  const btn = $("c-build");
+  if (!comicFiles.length) { st.err("✗ 请先上传至少一张图片"); return; }
+  const data = new FormData();
+  data.append("type", "comic");
+  data.append("title", $("c-title").value.trim() || "未命名漫画");
+  data.append("authors", JSON.stringify(cAuthors));
+  data.append("translators", JSON.stringify(cTranslators));
+  data.append("publisher", $("c-publisher").value.trim());
+  data.append("pub_date", $("c-year").value.trim());
+  data.append("isbn", $("c-isbn").value.trim());
+  data.append("language", $("c-lang").value);
+  data.append("epub", $("c-epub").checked ? "1" : "0");
+  data.append("azw3", $("c-azw3").checked ? "1" : "0");
+  comicFiles.forEach(f => data.append("images", f, f.name));
+
+  btn.disabled = true;
+  $("c-results").style.display = "none";
+  st.run("正在锻造" + ($("c-azw3").checked ? "（AZW3 转换可能需要几分钟）……" : "……"));
+  try {
+    const resp = await fetch("/api/build", { method: "POST", body: data });
+    const json = await resp.json();
+    if (json.ok) {
+      st.ok("✓ 已生成《" + json.title + "》，共 " + comicFiles.length + " 页");
+      showResults("c-results", json.files);
+    } else {
+      st.err("✗ " + (json.error || "生成失败"));
+    }
+  } catch (err) {
+    st.err("✗ 网络错误：" + err.message);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+renderTree();
+
+/* 页面被关闭或刷新时，通知服务端清空 output 产物缓存（页面本身无持久化，刷新即回到全新状态） */
+window.addEventListener("pagehide", () => {
+  try { navigator.sendBeacon("/api/reset"); } catch (e) { /* 忽略 */ }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# ---- BookForge 运行产物 ----
+output/
+*.epub
+*.azw3
+*.mobi
+
+# ---- 临时/调试文件 ----
+_*.py
+_*.docx
+_*.epub
+*.log
+*.tmp
+
+# ---- 系统文件 ----
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# ---- 编辑器 ----
+.vscode/
+.idea/
+*.swp
