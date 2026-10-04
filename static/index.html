@@ -148,6 +148,19 @@
   .tnode { margin-bottom: 8px; }
   .trow { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
   .tno { font-weight: 700; color: var(--md-primary); font-size: 13px; min-width: 40px; flex-shrink: 0; }
+  /* 子章节折叠按钮（M3 图标按钮） */
+  .tfold {
+    border: none; background: transparent; width: 26px; height: 26px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer; border-radius: 50%; flex-shrink: 0;
+    color: var(--md-on-surface-variant);
+    transition: background var(--transition), color var(--transition);
+  }
+  .tfold:hover { background: var(--md-primary-container); color: var(--md-primary); }
+  .tfold svg { transition: transform .18s ease; }
+  .tfold.open svg { transform: rotate(90deg); }
+  .tfold.leaf { visibility: hidden; }
+  .tchildren.collapsed { display: none; }
   .ttitle { flex: 1; padding: 8px 10px; }
   .t-tag {
     font-size: 11px; border: 1px solid var(--md-success); color: var(--md-on-success-container);
@@ -688,8 +701,13 @@ function renderNode(node, path) {
   div.className = "tnode";
   div.dataset.id = node.id;
   const hasContent = (node.content || "").trim();
+  const hasKids = node.children && node.children.length > 0;
+  const folded = !!(hasKids && node._collapsed);
   div.innerHTML =
     '<div class="trow" style="padding-left:' + ((depth - 1) * 24) + 'px">' +
+      '<button class="tfold' + (hasKids ? (folded ? "" : " open") : " leaf") + '" data-act="fold" title="' + (hasKids ? "点击收纳 / 展开子章节" : "") + '" aria-label="' + (hasKids ? "折叠或展开子章节" : "") + '">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>' +
+      '</button>' +
       '<span class="tno">' + path.join(".") + '</span>' +
       '<input class="ttitle" placeholder="标题（如：第一卷 / 第一篇 / 第一章 / 第一节）" value="' + escapeHtml(node.title) + '">' +
       '<span class="t-tag' + (hasContent ? "" : " empty") + '">' + (hasContent ? "正文" : "目录层级") + '</span>' +
@@ -707,7 +725,7 @@ function renderNode(node, path) {
     '<div class="tbody" style="padding-left:' + ((depth - 1) * 24) + 'px">' +
       '<textarea class="tcontent" placeholder="正文（纯文本，空行自动分段）。若留空，则本条仅作为目录分类层级。">' + escapeHtml(node.content) + '</textarea>' +
     '</div>' +
-    '<div class="tchildren"></div>';
+    '<div class="tchildren' + (folded ? " collapsed" : "") + '"></div>';
   div.querySelector(".ttitle").addEventListener("input", e => node.title = e.target.value);
   div.querySelector(".tcontent").addEventListener("input", e => node.content = e.target.value);
   const childBox = div.querySelector(".tchildren");
@@ -778,6 +796,14 @@ $("t-chapters").addEventListener("click", e => {
   if (!hit) return;
   const act = btn.dataset.act;
   const { node, parent, idx } = hit;
+  if (act === "fold") {
+    node._collapsed = !node._collapsed;
+    const box = tnode.querySelector(".tchildren");
+    const foldBtn = tnode.querySelector(".tfold");
+    if (box) box.classList.toggle("collapsed", node._collapsed);
+    if (foldBtn) foldBtn.classList.toggle("open", !node._collapsed);
+    return;   // 仅切换收纳状态，不重渲染整棵树
+  }
   if (act === "child") {
     node.children.push(newNode());
   } else if (act === "after") {
