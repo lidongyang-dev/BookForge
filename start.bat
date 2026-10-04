@@ -1,12 +1,15 @@
 @echo off
-chcp 65001 >nul
+rem ================================================
+rem  BookForge å¯åŠ¨è„šæœ¬ - è‡ªåˆ¶ Kindle ä¹¦ç±å·¥ä½œå°
+rem  ä¸­æ–‡æ³¨é‡Šï¼šæœ¬æ–‡ä»¶ä½¿ç”¨ UTF-8 ç¼–ç ä¿å­˜
+rem ================================================
 cd /d "%~dp0"
-title BookForge - ×ÔÖÆ Kindle Êé¼®¹¤×÷Ì¨
+title BookForge - Kindle Book Maker
 echo.
 echo  ================================================
-echo   BookForge Æô¶¯ÖĞ...
-echo   Æô¶¯ºóä¯ÀÀÆ÷½«×Ô¶¯´ò¿ª http://127.0.0.1:8777
-echo   ¹Ø±Õ±¾´°¿Ú¼´Í£Ö¹·şÎñ
+echo   BookForge is starting...
+echo   The browser will open http://127.0.0.1:8777 automatically
+echo   Close this window to stop the service
 echo  ================================================
 echo.
 start "" http://127.0.0.1:8777

@@ -18,6 +18,10 @@ _*.epub
 *.log
 *.tmp
 
+# ---- 前端自检产物与备份 ----
+static/_shots/
+static/_backup/
+
 # ---- 系统文件 ----
 Thumbs.db
 Desktop.ini

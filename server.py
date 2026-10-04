@@ -624,16 +624,16 @@ def main():
         port = int(sys.argv[1])
     calibre = find_calibre()
     print("=" * 52)
-    print("  BookForge — 自制 Kindle 书籍工作台")
-    print("  访问地址: http://127.0.0.1:%d" % port)
-    print("  Calibre : %s" % (calibre or "未找到（AZW3 转换不可用）"))
-    print("  按 Ctrl+C 停止服务")
+    print("  BookForge — Self-Hosted Kindle E-book Maker")
+    print("  URL: http://127.0.0.1:%d" % port)
+    print("  Calibre : %s" % (calibre or "not found (AZW3 conversion unavailable)"))
+    print("  Press Ctrl+C to stop")
     print("=" * 52)
     server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        print("\nBookForge 已停止。")
+        print("\nBookForge stopped.")
         server.server_close()
 
 
