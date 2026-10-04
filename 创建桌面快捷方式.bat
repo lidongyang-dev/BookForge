@@ -1,10 +1,10 @@
 @echo off
 rem ================================================
 rem  BookForge - Create Desktop Shortcut
-rem  中文注释：本文件以 GBK 编码保存
-rem  双击本文件将在桌面创建 BookForge 快捷方式，
-rem  快捷方式指向当前文件夹（便携包解压位置），
-rem  不包含任何绝对路径；移动文件夹后可重新双击生成
+rem  Run this once after unzipping: it creates a
+rem  BookForge shortcut on your desktop that points
+rem  to THIS folder (no hard-coded absolute path).
+rem  Re-run it if you move the folder to a new place.
 rem ================================================
 cd /d "%~dp0"
 title BookForge - Create Desktop Shortcut
