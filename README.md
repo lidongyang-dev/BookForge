@@ -34,7 +34,7 @@
 
 ## 快速开始
 
-**GUI 完整版**（含桌面窗口）：双击 `BookForge.lnk` —— 弹出 BookForge 桌面窗口（无终端窗口），关闭窗口即停止服务。
+**GUI 完整版**（含桌面窗口）：解压后先双击 `创建桌面快捷方式.bat`，在桌面生成 BookForge 快捷方式（自动指向当前解压位置，不写死绝对路径）；之后双击桌面 BookForge 图标即可启动。也可直接双击 `start.bat`。
 
 **纯服务版**（系统托盘常驻）：双击 `start.bat` —— 右下角托盘区出现 BookForge 图标：左键单击打开网页，右键菜单"打开 BookForge / 退出"。
 
@@ -46,7 +46,7 @@ python server.py --tray      # 系统托盘模式
 python server.py [端口]      # 纯服务模式，浏览器访问 http://127.0.0.1:8777
 ```
 
-**便携说明**：仓库自带 `runtime\`（便携 Python 3.14.7，含 pywebview / pystray）与 `calibre\`（精简版 Calibre）；`start.bat` 与 `server.py` 优先使用项目内依赖，找不到才回退系统安装。整个文件夹复制到任何 64 位 Windows 电脑即可运行，目标机器**无需预装 Python / Calibre**。
+**便携说明**：仓库自带 `runtime\`（便携 Python 3.14.7，含 pywebview / pystray）与 `calibre\`（精简版 Calibre）；`start.bat` 与 `server.py` 优先使用项目内依赖，找不到才回退系统安装。整个文件夹复制到任何 64 位 Windows 电脑即可运行，目标机器**无需预装 Python / Calibre**；复制到新位置后请重新双击 `创建桌面快捷方式.bat` 生成快捷方式（快捷方式不写死路径）。
 
 ## 界面预览
 
