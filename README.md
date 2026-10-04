@@ -34,61 +34,19 @@
 
 ## 快速开始
 
+**GUI 完整版**（含桌面窗口）：双击 `BookForge.lnk` —— 弹出 BookForge 桌面窗口（无终端窗口），关闭窗口即停止服务。
 
+**纯服务版**（系统托盘常驻）：双击 `start.bat` —— 右下角托盘区出现 BookForge 图标：左键单击打开网页，右键菜单"打开 BookForge / 退出"。
 
-```
-双击 start.bat
-```
-
-或命令行（需 Python 3.8+）：
-
-
+**命令行**（需 Python 3.8+）：
 
 ```
-python server.py [端口]
+python server.py --desktop   # 桌面窗口模式
+python server.py --tray      # 系统托盘模式
+python server.py [端口]      # 纯服务模式，浏览器访问 http://127.0.0.1:8777
 ```
 
-然后浏览器打开 [http://127.0.0.1:8777](http://127.0.0.1:8777)（端口可改，默认 8777）。
-
-> **三种运行模式**
->
-> - **桌面窗口（GUI 完整版）**：双击 `BookForge.lnk`（快捷方式，无终端窗口）或 `python server.py --desktop` —— 弹出原生桌面窗口（pywebview + 系统 WebView2 内核），关闭窗口即停止服务
-> - **系统托盘（纯服务版）**：`python server.py --tray` 或双击 `start.bat` —— 服务在后台运行，右下角托盘区常驻 BookForge 图标：**左键单击打开网页**，**右键菜单"打开 BookForge / 退出"**
-> - **纯服务模式**：`python server.py [端口]` —— 只起本地服务，手动用浏览器访问
->
-> GUI 完整版双击 `BookForge.lnk` 以无控制台方式运行（`pythonw.exe`），不再弹出终端窗口。
-
-> **便携模式**
->
-> ：仓库自带 
->
-> `runtime\`
->
-> （便携 Python 3.14.7，含 pywebview 桌面窗口库）与 
->
-> `calibre\`
->
-> （精简版 Calibre），
-> `start.bat`
->
->  与 
->
-> `server.py`
->
->  会
->
-> **优先使用项目内依赖**
->
-> ，找不到才回退系统安装。
-> 整个文件夹复制到任何 64 位 Windows 电脑即可运行，目标机器
->
-> **无需预装 Python / Calibre**
->
-> 。
-
-
-
-***
+**便携说明**：仓库自带 `runtime\`（便携 Python 3.14.7，含 pywebview / pystray）与 `calibre\`（精简版 Calibre）；`start.bat` 与 `server.py` 优先使用项目内依赖，找不到才回退系统安装。整个文件夹复制到任何 64 位 Windows 电脑即可运行，目标机器**无需预装 Python / Calibre**。
 
 ## 使用指南
 
