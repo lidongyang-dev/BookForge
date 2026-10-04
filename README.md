@@ -24,6 +24,7 @@
 | 版权页           | 出版社、出版时间（可选，精确到日）、ISBN，自动 © 声明，OPF 元数据同步            |
 | 多人著 / 译       | 著者与译者均支持多人（EPUB 规范 `opf:role="aut"/"trl"`）          |
 | 便携分发          | 内置便携 Python 与精简版 Calibre，整个文件夹拷走即用                  |
+| 桌面窗口          | pywebview 原生窗口（系统 WebView2 内核），双击 start.bat 即开即用，无需浏览器 |
 | Material 3 界面 | Google 材质 3 风格，**8 套预设主题色 + 自定义取色**，选择自动记忆          |
 | 目录收纳          | 有子章节的条目可点击**折叠 / 展开**（Word 大纲式），状态持久化               |
 
@@ -49,13 +50,20 @@ python server.py [端口]
 
 然后浏览器打开 [http://127.0.0.1:8777](http://127.0.0.1:8777)（端口可改，默认 8777）。
 
+> **两种运行模式**
+>
+> - **桌面窗口（默认）**：`python server.py --desktop` —— 弹出原生桌面窗口（pywebview + 系统 WebView2 内核），关闭窗口即停止服务，无需打开浏览器
+> - **纯服务模式**：`python server.py [端口]` —— 只起本地服务，用浏览器访问
+>
+> `start.bat` 默认以桌面窗口模式启动。
+
 > **便携模式**
 >
 > ：仓库自带 
 >
 > `runtime\`
 >
-> （便携 Python 3.14.7）与 
+> （便携 Python 3.14.7，含 pywebview 桌面窗口库）与 
 >
 > `calibre\`
 >
@@ -197,7 +205,7 @@ BookForge 可整体离线运行：
 
 ```
 BookForge/
-├── runtime\  24 MB  便携 Python 3.14.7（官方 embeddable 包）
+├── runtime\  24 MB  便携 Python 3.14.7 + pywebview（官方 embeddable 包）
 ├── calibre\ 279 MB  精简版 Calibre（原装 632 MB → 精简 56%）
 ├── server.py / epub_builder.py / static\ / test_build.py  …
 └── start.bat              一键启动（优先 runtime\python.exe）
@@ -256,7 +264,7 @@ bookforge/
 │   ├── index.html       # 前端工作台（Material 3，原生 JS，无框架）
 │   ├── tree_ops.js      # 目录树逻辑（纯函数，node 可测）
 │   └── _backup/ _shots/ # 改版备份 / 自检截图（不入库）
-├── runtime/             # 便携 Python（不入库）
+├── runtime/             # 便携 Python + pywebview（不入库）
 ├── calibre/             # 精简版 Calibre（不入库）
 ├── test_build.py        # 回归测试（python test_build.py）
 ├── testdata/            # 回归测试素材
@@ -361,9 +369,9 @@ BookForge 产物包含 EPUB3 nav + NCX 双目录，Calibre 转 AZW3 也保留目
 
 **Q：点击 "锻造" 提示&#x20;**`✗ 网络错误：Failed to fetch`**？**
 
-A：一般原因是本地服务未运行（`start.bat` 窗口被关闭）或端口被占用导致新旧进程并存。
+A：一般原因是本地服务未运行（桌面窗口 / `start.bat` 窗口被关闭）或端口被占用导致新旧进程并存。
 
-确认 8777 端口服务在跑；若改过代码，重启服务并**强制刷新浏览器**（Ctrl+F5）。
+确认 8777 端口服务在跑；若改过代码，重启服务并**强制刷新**（桌面窗口模式 Ctrl+F5 或重启窗口；浏览器模式同样 Ctrl+F5）。
 
 **Q：页面改了代码但浏览器里没变化？**
 

@@ -624,23 +624,54 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main():
-    port = 8777
     import sys
-    if len(sys.argv) > 1:
-        port = int(sys.argv[1])
+    args = sys.argv[1:]
+    desktop = "--desktop" in args or "--gui" in args
+    port = 8777
+    for a in args:
+        if a.isdigit():
+            port = int(a)
+            break
     calibre = find_calibre()
     print("=" * 52)
     print("  BookForge — Self-Hosted Kindle E-book Maker")
     print("  URL: http://127.0.0.1:%d" % port)
+    print("  Mode: %s" % ("desktop window (pywebview)" if desktop else "browser"))
     print("  Calibre : %s" % (calibre or "not found (AZW3 conversion unavailable)"))
     print("  Press Ctrl+C to stop")
     print("=" * 52)
     server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        print("\nBookForge stopped.")
-        server.server_close()
+    if desktop:
+        import threading
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        try:
+            import webview
+        except ImportError:
+            print("  [pywebview unavailable] falling back to browser mode")
+            import webbrowser
+            webbrowser.open("http://127.0.0.1:%d" % port)
+            try:
+                server.serve_forever()
+            except KeyboardInterrupt:
+                pass
+        else:
+            webview.create_window(
+                "BookForge — 自制 Kindle 书籍工作台",
+                "http://127.0.0.1:%d" % port,
+                width=1440,
+                height=900,
+                min_size=(960, 640),
+            )
+            webview.start()
+            server.shutdown()
+            server.server_close()
+            print("\nBookForge stopped.")
+    else:
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            print("\nBookForge stopped.")
+            server.server_close()
 
 
 if __name__ == "__main__":
