@@ -1,10 +1,10 @@
 # BookForge — 自制 Kindle 书籍工作台
 
-> Craft Kindle-ready e-books from TXT/EPUB/DOCX — a local web workbench with chapter-tree editing, auto note detection, and EPUB/AZW3 export.
+> Craft Kindle-ready e-books from TXT/EPUB/DOCX — a local workbench with chapter-tree editing, auto note detection, EPUB/AZW3 export, desktop window & system-tray modes.
 
 自制 Kindle 支持格式（**EPUB / AZW3**）的书籍：把文字做成书、把图片做成漫画。
 
-本地网页工作台，数据不出本机。
+本地工作台，数据不出本机；桌面窗口 / 系统托盘 / 浏览器三种运行方式任选。
 
 
 
