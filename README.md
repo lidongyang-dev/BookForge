@@ -246,6 +246,16 @@ robocopy "C:\Program Files\Calibre2\app\plugins" calibre\app\plugins /E /MT:16
 >  → 系统常见安装路径。
 > 未附带 Calibre 时，EPUB 照常可用，仅 AZW3 不可用。
 
+### 发布包（GitHub Releases）
+
+| 包 | 内容 | 启动方式 |
+|---|---|---|
+| `BookForge-portable.zip`（GUI 完整版） | 含 pywebview 桌面窗口库（系统 WebView2） | 双击 `start.bat` 弹出原生窗口，无需浏览器 |
+| `BookForge-portable-browser.zip`（纯服务版） | 不含桌面窗口库，体积更小 | 双击 `start.bat` 自动打开浏览器访问 |
+
+两个包均含完整源码、便携 Python 与精简版 Calibre，解压即用；代码本身同时支持
+`python server.py --desktop`（桌面窗口）与 `python server.py`（纯服务）两种模式。
+
 
 
 ***
