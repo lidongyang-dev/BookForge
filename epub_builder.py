@@ -10,7 +10,6 @@
     OEBPS/content.opf            -> 包描述（元数据 / manifest / spine）
     OEBPS/nav.xhtml              -> EPUB3 导航文档
     OEBPS/toc.ncx                -> EPUB2 NCX（兼容层）
-    OEBPS/cover.xhtml            -> 封面页（可选）
     OEBPS/chapter_XXX.xhtml      -> 章节 / 漫画页
     OEBPS/images/...             -> 图片资源
 """
@@ -537,9 +536,6 @@ def build_text_epub(out_path, title, authors, translators, language, chapters,
         ext = cover_path.suffix.lower()
         cover_item_id = "cover-image"
         w.add_manifest_item(cover_item_id, "images/cover" + ext, mime, "cover-image")
-        w.add_manifest_item("cover", "cover.xhtml", "application/xhtml+xml")
-        w.add_spine_item("cover")
-        w.add_toc_node(_TocNode("封面", "cover.xhtml"))
 
     # 先序遍历：注册页面 + 构建目录树
     pages = []   # (序号, href, body_html)
@@ -907,14 +903,8 @@ def build_text_epub(out_path, title, authors, translators, language, chapters,
     with w.open() as zf:
         w.add_container(zf)
         if cover_path:
+            # 封面图片只作书架缩略图（meta name="cover"），不再生成独立封面页
             zf.write(str(cover_path), "OEBPS/images/cover" + cover_path.suffix.lower())
-            cover_html = (
-                '<div style="text-align:center;margin:0;padding:0">'
-                '<img src="images/cover%s" alt="封面" '
-                'style="max-width:100%%;height:auto"/></div>' % cover_path.suffix.lower()
-            )
-            zf.writestr("OEBPS/cover.xhtml",
-                        _xhtml_document("封面", cover_html).encode("utf-8"))
         zf.writestr("OEBPS/copyright.xhtml",
                     _xhtml_document("版权页", _copyright_xhtml(
                         title, authors, translators, publisher, pub_date, isbn)
