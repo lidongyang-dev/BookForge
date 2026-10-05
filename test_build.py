@@ -187,7 +187,8 @@ def test_copyright_page():
         assert 'opf:scheme="ISBN">978-7-01-000000-0<' in opf
         assert "copyright.xhtml" in zf.read("OEBPS/nav.xhtml").decode("utf-8")
         cp = zf.read("OEBPS/copyright.xhtml").decode("utf-8")
-        assert "人民出版社" in cp and "ISBN" in cp and "©" in cp
+        assert "人民出版社" in cp and "ISBN" in cp and "版权所有，翻版必究" in cp
+        assert "©" not in cp
         assert "出版时间：2026年10月3日" in cp
     print("[OK] 版权页:", out)
 

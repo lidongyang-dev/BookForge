@@ -444,8 +444,7 @@ def _copyright_xhtml(title, authors, translators, publisher, pub_date, isbn):
     if isbn:
         lines.append('<p>ISBN：%s</p>' % escape_text(isbn))
     who = "、".join(authors) if authors else "本书作者"
-    year = pub_date[:4] if pub_date else ""
-    notice = "© %s %s。保留所有权利。" % (year or "（未标注年份）", who)
+    notice = "%s 版权所有，翻版必究。" % who
     lines.append('<p style="font-size:0.85em;color:#666;margin-top:1.6em">%s</p>'
                  % escape_text(notice))
     lines.append('<p style="font-size:0.85em;color:#666">本书由 BookForge 制作。</p>')
