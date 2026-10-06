@@ -517,10 +517,12 @@ def build_text_epub(out_path, title, authors, translators, language, chapters,
     authors = _names(authors)
     translators = _names(translators)
 
-    # 版权页（置于封面之后、正文之前）
-    w.add_manifest_item("copyright", "copyright.xhtml", "application/xhtml+xml")
-    w.add_spine_item("copyright")
-    w.add_toc_node(_TocNode("版权页", "copyright.xhtml"))
+    # 版权页（可选：填了出版社/出版时间/ISBN 任一才生成，全空则完全跳过）
+    has_copyright = bool(publisher or pub_date or isbn)
+    if has_copyright:
+        w.add_manifest_item("copyright", "copyright.xhtml", "application/xhtml+xml")
+        w.add_spine_item("copyright")
+        w.add_toc_node(_TocNode("版权页", "copyright.xhtml"))
 
     # 首行缩进：章节页 <head> 注入样式（版权页不缩进）
     extra_head = ""
@@ -904,10 +906,11 @@ def build_text_epub(out_path, title, authors, translators, language, chapters,
         if cover_path:
             # 封面图片只作书架缩略图（meta name="cover"），不再生成独立封面页
             zf.write(str(cover_path), "OEBPS/images/cover" + cover_path.suffix.lower())
-        zf.writestr("OEBPS/copyright.xhtml",
-                    _xhtml_document("版权页", _copyright_xhtml(
-                        title, authors, translators, publisher, pub_date, isbn)
-                    ).encode("utf-8"))
+        if has_copyright:
+            zf.writestr("OEBPS/copyright.xhtml",
+                        _xhtml_document("版权页", _copyright_xhtml(
+                            title, authors, translators, publisher, pub_date, isbn)
+                        ).encode("utf-8"))
         for idx, href, body in pages:
             zf.writestr("OEBPS/" + href,
                         _xhtml_document("", body, extra_head=extra_head).encode("utf-8"))
@@ -960,10 +963,12 @@ def build_comic_epub(out_path, title, authors, translators, language, image_path
         w.add_manifest_item(cover_item_id, "images/page_001" + images[0].suffix.lower(),
                             image_mime(images[0]), "cover-image")
 
-    # 版权页（置于第一页之前）
-    w.add_manifest_item("copyright", "copyright.xhtml", "application/xhtml+xml")
-    w.add_spine_item("copyright")
-    w.add_toc_node(_TocNode("版权页", "copyright.xhtml"))
+    # 版权页（可选：填了出版社/出版时间/ISBN 任一才生成，全空则完全跳过）
+    has_copyright = bool(publisher or pub_date or isbn)
+    if has_copyright:
+        w.add_manifest_item("copyright", "copyright.xhtml", "application/xhtml+xml")
+        w.add_spine_item("copyright")
+        w.add_toc_node(_TocNode("版权页", "copyright.xhtml"))
 
     # 页面
     for idx, img in enumerate(images, start=1):
@@ -976,10 +981,11 @@ def build_comic_epub(out_path, title, authors, translators, language, image_path
 
     with w.open() as zf:
         w.add_container(zf)
-        zf.writestr("OEBPS/copyright.xhtml",
-                    _xhtml_document("版权页", _copyright_xhtml(
-                        title, authors, translators, publisher, pub_date, isbn)
-                    ).encode("utf-8"))
+        if has_copyright:
+            zf.writestr("OEBPS/copyright.xhtml",
+                        _xhtml_document("版权页", _copyright_xhtml(
+                            title, authors, translators, publisher, pub_date, isbn)
+                        ).encode("utf-8"))
         for idx, img in enumerate(images, start=1):
             href = "page_%03d.xhtml" % idx
             img_href = "images/page_%03d%s" % (idx, img.suffix.lower())

@@ -48,8 +48,12 @@ def test_text_book():
     ]
     out = OUT / "示例文字书.epub"
     epub_builder.build_text_epub(out, "示例文字书", "BookForge 测试", [], "zh", chapters)
-    verify(out, expect_spine=3)  # 版权页 + 2 章
-    print("[OK] 文字书:", out)
+    verify(out, expect_spine=2)  # 2 章（未填版权信息 -> 不生成版权页）
+    with zipfile.ZipFile(out) as zf:
+        assert "OEBPS/copyright.xhtml" not in zf.namelist()
+        assert 'idref="copyright"' not in zf.read("OEBPS/content.opf").decode("utf-8")
+        assert "版权页" not in zf.read("OEBPS/nav.xhtml").decode("utf-8")
+    print("[OK] 文字书（未填版权信息无版权页）:", out)
 
 
 def test_comic_book():
@@ -57,7 +61,7 @@ def test_comic_book():
     assert pages, "testdata 中没有测试图片"
     out = OUT / "示例漫画.epub"
     epub_builder.build_comic_epub(out, "示例漫画", "BookForge 测试", [], "zh", pages)
-    verify(out, expect_spine=len(pages) + 1)  # 版权页 + N 页漫画
+    verify(out, expect_spine=len(pages))  # N 页漫画（未填版权信息 -> 无版权页）
     print("[OK] 漫画书:", out)
 
 
@@ -91,14 +95,14 @@ def test_nested_tree():
     ]
     out = OUT / "示例多级目录.epub"
     epub_builder.build_text_epub(out, "示例多级目录", "BookForge 测试", [], "zh", chapters)
-    verify(out, expect_spine=7)  # 版权页 + 6 页（篇一/章一/章二/章三/节一/卷二卷首）
+    verify(out, expect_spine=6)  # 6 页（篇一/章一/章二/章三/节一/卷二卷首）
     with zipfile.ZipFile(out) as zf:
         nav = zf.read("OEBPS/nav.xhtml").decode("utf-8")
         ncx = zf.read("OEBPS/toc.ncx").decode("utf-8")
         assert nav.count("<ol>") >= 3, "nav 应有多级嵌套"
-        assert nav.count("<li>") == 9, "nav 应有 9 个目录条目（含版权页）"
+        assert nav.count("<li>") == 8, "nav 应有 8 个目录条目"
         assert ncx.count("<navMap>") >= 3, "NCX 应有多级嵌套"
-        assert ncx.count("<navPoint") == 9, "NCX 应有 9 个 navPoint（含版权页）"
+        assert ncx.count("<navPoint") == 8, "NCX 应有 8 个 navPoint"
         # 纯分类节点（第一卷）应指向其后代页面
         import re
         vol1_href = re.search(r'<li><a href="(chapter_\d+\.xhtml)">第一卷</a>', nav)
@@ -123,7 +127,7 @@ def test_notes_footnotes():
     ]
     out = OUT / "示例注释书.epub"
     epub_builder.build_text_epub(out, "示例注释书", "BookForge 测试", [], "zh", chapters)
-    verify(out, expect_spine=3)  # 版权页 + 2 章
+    verify(out, expect_spine=2)  # 2 章
     with zipfile.ZipFile(out) as zf:
         ch1 = zf.read("OEBPS/chapter_001.xhtml").decode("utf-8")
         ch2 = zf.read("OEBPS/chapter_002.xhtml").decode("utf-8")
@@ -154,7 +158,7 @@ def test_multi_creators():
     epub_builder.build_text_epub(
         out, "示例多人元数据",
         ["马克思", "恩格斯"], ["郭大力", "王亚南"], "zh", chapters)
-    verify(out, expect_spine=2)  # 版权页 + 1 章
+    verify(out, expect_spine=1)  # 1 章（未填版权信息 -> 无版权页）
     with zipfile.ZipFile(out) as zf:
         opf = zf.read("OEBPS/content.opf").decode("utf-8")
         aut = re.findall(r'<dc:creator opf:role="aut">([^<]+)</dc:creator>', opf)
@@ -265,12 +269,11 @@ def test_pubdate_year_only():
         assert "opf:event" not in opf.split("<dc:date>2026</dc:date>")[0][-50:]
         cp = zf.read("OEBPS/copyright.xhtml").decode("utf-8")
         assert "出版时间：2026" in cp and "出版时间：2026年" not in cp
-    # 留空：版权页无出版时间行
+    # 留空：不生成版权页（与"可选"语义一致）
     out2 = OUT / "示例无时间.epub"
     epub_builder.build_text_epub(out2, "无时间书", "作者", [], "zh", ch)
     with zipfile.ZipFile(out2) as zf:
-        cp = zf.read("OEBPS/copyright.xhtml").decode("utf-8")
-        assert "出版时间" not in cp
+        assert "OEBPS/copyright.xhtml" not in zf.namelist()
         opf = zf.read("OEBPS/content.opf").decode("utf-8")
         assert "dc:date" not in opf
     print("[OK] 仅年份/留空出版时间:", out, "|", out2)
